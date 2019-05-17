@@ -63,6 +63,7 @@ class Board():
     adjacent_same_color = []
     adjacent_opposite_color = []
     liberties = []
+
     for neighbor in point.neighbors():
       if not self.is_on_grid(neighbor):
         continue
@@ -75,6 +76,7 @@ class Board():
       else:
         if neighbor_string not in adjacent_opposite_color:
           adjacent_opposite_color.append(neighbor_string)
+
     new_string = GoString(player, [point], liberties)
     for same_color_string in adjacent_same_color:
       new_string = new_string.merged_with(same_color_string)
@@ -85,7 +87,7 @@ class Board():
         self.remove_string(other_color_string)
 
   def is_on_grid(self, point):
-    return 1 <= point.row <= self.num_rows and 1<= point.col <= self.num_cols
+    return 1 <= point.row <= self.num_rows and 1 <= point.col <= self.num_cols
 
   def get(self, point):
     string = self._grid.get(point)
