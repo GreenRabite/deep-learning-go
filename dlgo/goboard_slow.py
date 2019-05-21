@@ -84,7 +84,7 @@ class Board():
       self._grid[new_string_point] = new_string
     for other_color_string in adjacent_opposite_color:
       if other_color_string.num_liberties == 0:
-        self.remove_string(other_color_string)
+        self._remove_string(other_color_string)
 
   def is_on_grid(self, point):
     return 1 <= point.row <= self.num_rows and 1 <= point.col <= self.num_cols
@@ -100,3 +100,51 @@ class Board():
     if string is None:
       return None
     return string
+
+  def _remove_string(self, string):
+    for point in string.stones:
+      for neighbor in point.neighbors():
+        neighbor_string = self._grid.get(neighbor)
+        if neighbor_string is None:
+          continue
+        if neighbor_string is not string:
+          neighbor_string.add_liberty(point)
+        self._grid[point] = None
+
+class GameState():
+  def __init__(self, board, next_player, previous, move):
+    self.board = board
+    self.next_player = next_player
+    self.previous_state = previous
+    self.last_move = move
+  
+  def apply_move(self, move):
+    if move.is_play:
+      next_board = copy.deepcopy(self,board)
+      next_board.place_stone(self.next_player, move.point)
+    else:
+      next_board = self.board
+    return GameState(next_board, self.next_player, self.next_player.other, self, move)
+
+  @classmethod
+  def new_game(cls, board_size):
+    if isinstance(board_size, int):
+      board_size = (board_size, board_size)
+      board = Board(*board_size)
+      return GameState(board, Player.black, None, None)
+
+  def is_over(self):
+    if self.last_move is None:
+      return False
+    if self.last_move.is_resign:
+      return True
+    second_last_move = self.previous_state.last_move
+
+  def is_move_self_capture(self, player, move):
+    if not move.is_play:
+      return False
+    # makes a deep copy of the board before replaying the move to see if it legal
+    next_board = copy.deepcopy(self.board)
+    next_board.place_stone(player, move.point)
+    new_string = next_board.get_go_string(move.point)
+    return new_string.num_liberties == 0
